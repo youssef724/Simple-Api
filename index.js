@@ -13,7 +13,10 @@ mongoose.connect(URL).then(() => {
 });
 
 const coursesRouter = require("./routes/courses.route");
+const usersRouter = require("./routes/users.route");
 app.use("/api/Courses", coursesRouter);
+app.use("/api/Users", usersRouter);
+
 app.all("*", (req, res, next) => {
   return res
     .status(404)
@@ -24,6 +27,6 @@ app.use((error , req,res,next)=>{
   .status(500)
   .json({ status: httpStatusText.ERROR, msg:error.message});
 })
-app.listen(process.env.PORT | 5000, () => {
+app.listen(process.env.PORT || 5000, () => {
   console.log("listen on Port 5000");
 });
