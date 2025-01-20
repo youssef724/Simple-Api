@@ -1,22 +1,25 @@
-const express = require("express");
+
+const express = require('express');
+
 const router = express.Router();
-const { body, validationResult } = require("express-validator");
-const courseController = require("../controllers/courses.controllers");
+
+const courseController = require('../controllers/courses.controller');
+
+const { validationSchema } = require('../middleware/validationSchema');
+const verifyToken = require('../middleware/verfiyToken');
+const userRoles = require('../utils/userRoles');
+const allowedTo = require('../middleware/allowedTo');
 
 
-router.route("/")
+router.route('/')
             .get(courseController.getAllCourses)
-            .post(
-              body("title").notEmpty(),
-              body("price").notEmpty(),
-              courseController.AddCourse
-            )
+            .post(verifyToken, allowedTo(userRoles.MANGER), validationSchema(), courseController.addCourse);
 
 
-router.route("/:id")
-            .get(courseController.getSingleCourse)
-            .patch(courseController.EditCourse)
-            .delete(courseController.DeleteCourse);
+router.route('/:courseId')
+            .get(courseController.getCourse)
+            .patch(courseController.updateCourse)
+            .delete(verifyToken, allowedTo(userRoles.ADMIN, userRoles.MANGER), courseController.deleteCourse);
+
 
 module.exports = router;
-

@@ -1,32 +1,51 @@
-const { error } = require("console");
-const express = require("express");
-const { title } = require("process");
+
+require('dotenv').config()
+const express = require('express');
+const path = require('path');
+
+const cors = require('cors');
+
+
 const app = express();
-app.use(express.json());
-require("dotenv").config();
-const mongoose = require("mongoose");
-const httpStatusText = require("./utils/httpStatus");
 
-const URL = process.env.MONGO_URL;
-mongoose.connect(URL).then(() => {
-  console.log("Connected To DB");
-});
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const coursesRouter = require("./routes/courses.route");
-const usersRouter = require("./routes/users.route");
-app.use("/api/Courses", coursesRouter);
-app.use("/api/Users", usersRouter);
 
-app.all("*", (req, res, next) => {
-  return res
-    .status(404)
-    .json({ status: httpStatusText.ERROR, msg:"Not Found"});
-});
-app.use((error , req,res,next)=>{
-  return res
-  .status(500)
-  .json({ status: httpStatusText.ERROR, msg:error.message});
+const mongoose = require('mongoose');
+
+const httpStatusText = require('./utils/httpStatusText');
+
+
+const url = process.env.MONGO_URL;
+
+mongoose.connect(url).then(() => {
+    console.log('mongodb server started' , url);    
 })
-app.listen(process.env.PORT || 5000, () => {
-  console.log("listen on Port 5000");
+
+app.use(cors())
+app.use(express.json());
+
+const coursesRouter = require('./routes/courses.route');
+const usersRouter = require('./routes/users.route');
+
+
+app.use('/api/courses', coursesRouter) // /api/courses
+
+app.use('/api/users', usersRouter) // /api/users
+
+// global middleware for not found router
+app.all('*', (req, res, next)=> {
+    return res.status(404).json({ status: httpStatusText.ERROR, message: 'this resource is not available'})
+})
+
+// global error handler
+app.use((error, req, res, next) => {
+    res.status(error.statusCode || 500).json({status: error.statusText || httpStatusText.ERROR, message: error.message, code: error.statusCode || 500, data: null});
+})
+
+
+
+
+app.listen(process.env.PORT || 4000, () => {
+    console.log(`listening on port: ${process.env.PORT || 4000}`);
 });
